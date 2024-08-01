@@ -1,404 +1,272 @@
-# class Point:
-#     def __init__(self, x, y):
-#         self.x = x
-#         self.y = y
+from datetime import datetime
 
-#     def __repr__(self):
-#         return f"Point(x={self.x}, y={self.y})"
 
+class Field:
+    def __init__(self, value):
+        self.value = value
 
-# point = Point(2, 3)
-# print(repr(point))
+    def __str__(self):
+        return str(self.value)
 
 
-# class SimpleDict:
-#     def __init__(self):
-#         self.__data = {}
+class Birthday(Field):
+    def __init__(self, value):
+        try:
+            self.value = datetime.strptime(value, "%d.%m.%Y")
+        except ValueError:
+            raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
-#     def __getitem__(self, key):
-#         return self.__data.get(key, "Key not found")
 
-#     def __setitem__(self, key, value):
-#         self.__data[key] = value
+class Name(Field):
+    def __init__(self, name):
+        self.value = name
 
 
-# # Використання класу
-# simple_dict = SimpleDict()
-# simple_dict["name"] = "Boris"
-# print(simple_dict["name"])
-# print(simple_dict["age"])
+class Phone(Field):
+    def __init__(self, number):
+        self.value = self.validate_number(number)
 
+    def validate_number(self, number):
 
-# class BoundedList:
-#     def __init__(self, min_value: int, max_value: int):
-#         self.min_value = min_value
-#         self.max_value = max_value
-#         self.__data = []
+        if len(number) != 10:
+            raise ValueError("The phone number must contain 10 digits")
 
-#     def __getitem__(self, index: int):
-#         return self.__data[index]
+        if not number.isdigit():
+            raise ValueError("The phone number must contain only numbers")
 
-#     def __setitem__(self, index: int, value: int):
-#         if not (self.min_value <= value <= self.max_value):
-#             raise ValueError(
-#                 f"Value {value} must be between
-#                   {self.min_value} and {self.max_value}"
-#             )
-#         if index >= len(self.__data):
-#             # Додати новий елемент, якщо індекс виходить за межі
-#             self.__data.append(value)
-#         else:
-#             # Замінити існуючий елемент
-#             self.__data[index] = value
+        return number
 
-#     def __repr__(self):
-#         return f"BoundedList({self.max_value}, {self.min_value})"
 
-#     def __str__(self):
-#         return str(self.__data)
+class Record:
+    def __init__(self, name):
+        self.name = Name(name)
+        self.phones = []
+        self.birthday = None
 
+    def add_birthday(self, birthday):
+        self.birthday = Birthday(birthday)
 
-# if __name__ == "__main__":
-#     temperatures = BoundedList(18, 26)
+    def add_phone(self, phone_number):
+        phone = Phone(phone_number)
+        self.phones.append(phone)
 
-#     for i, el in enumerate([20, 22, 25, 27]):
-#         try:
-#             temperatures[i] = el
-#         except ValueError as e:
-#             print(e)
+    def remove_phone(self, phone_number):
+        new_phones = []
 
-#     print(temperatures)
+        for phone in self.phones:
 
-#
-# from collections import UserDict
+            if phone.value != phone_number:
+                new_phones.append(phone)
+        self.phones = new_phones
 
+    def edit_phone(self, old_phone_number, new_phone_number):
 
-# class MyDict(UserDict):
-#     def __add__(self, other):
-#         temp_dict = self.data.copy()
-#         temp_dict.update(other)
-#         return MyDict(temp_dict)
+        for phone in self.phones:
 
-#     def __sub__(self, other):
-#         temp_dict = self.data.copy()
-#         for key in other:
-#             if key in temp_dict:
-#                 temp_dict.pop(key)
-#         return MyDict(temp_dict)
+            if phone.value == old_phone_number:
+                self.phones.remove(phone)
+                self.add_phone(new_phone_number)
+                break
 
+    def find_phone(self, phone_number):
+        for phone in self.phones:
 
-# if __name__ == "__main__":
-#     d1 = MyDict({1: "a", 2: "b"})
-#     d2 = MyDict({3: "c", 4: "d"})
+            if phone.value == phone_number:
+                return phone
+        return None
 
-#     d3 = d1 + d2
-#     print(d3)
+    def __str__(self):
+        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
-#     d4 = d3 - d2
-#     print(d4)
 
+class AddressBook:
+    def __init__(self):
+        self.records = {}
 
-# class ComplexNumber:
-#     def __init__(self, real, imag):
-#         self.real = real
-#         self.imag = imag
+    def add_record(self, record):
+        self.records[record.name.value] = record
 
-#     def __add__(self, other):
-#         return ComplexNumber(self.real + other.real, self.imag + other.imag)
+    def find(self, name):
+        return self.records.get(name, None)
 
-#     def __sub__(self, other):
-#         return ComplexNumber(self.real - other.real, self.imag - other.imag)
+    def get_upcoming_birthdays(self):
+        today = datetime.today()
+        upcoming_birthdays = []
 
-#     def __mul__(self, other):
-#         real_part = self.real * other.real - self.imag * other.imag
-#         imag_part = self.real * other.imag + self.imag * other.real
-#         return ComplexNumber(real_part, imag_part)
+        for record in self.records.values():
 
-#     def __str__(self):
-#         return f"{self.real} + {self.imag}i"
+            if record.birthday:
+                next_birthday = record.birthday.value.replace(year=today.year)
 
+                if 0 <= (next_birthday - today).days <= 7:
+                    upcoming_birthdays.append(record.name.value)
 
-# if __name__ == "__main__":
-#     num1 = ComplexNumber(1, 2)
-#     num2 = ComplexNumber(3, 4)
-#     print(f"Сума: {num1 + num2}")
-#     print(f"Різниця: {num1 - num2}")
-#     print(f"Добуток: {num1 * num2}")
+        return upcoming_birthdays
 
-# from collections import UserList
 
+def input_error(func):
+    def wrapper(*args, **kwargs):
 
-# class MulArray(UserList):
-#     def __init__(self, *args):
-#         self.data = list(args)
+        try:
+            return func(*args, **kwargs)
 
-#     def __mul__(self, other):
-#         return self.__scalar_mul(other)
+        except (IndexError, KeyError, ValueError) as e:
 
-#     def __rmul__(self, other):
-#         return self.__scalar_mul(other)
+            return str(e)
 
-#     def __scalar_mul(self, other):
-#         result = 0
-#         for i in range(min(len(self.data), len(other))):
-#             result += self.data[i] * other[i]
-#         return result
+    return wrapper
 
 
-# if __name__ == "__main__":
-#     vec1 = MulArray(1, 2, 3)
-#     vec2 = MulArray(3, 4, 5)
+@input_error
+def add_contact(args, book: AddressBook):
+    name, phone = args
+    record = book.find(name)
+    message = "Contact updated."
 
-#     print(vec1 * vec2)
-#     print(vec1 * [1, 2, 3])
-#     print([1, 1, 1] * vec2)
+    if record is None:
+        record = Record(name)
+        book.add_record(record)
+        message = "Contact added."
+    record.add_phone(phone)
 
+    return message
 
-# class Rectangle:
-#     def __init__(self, width, height):
-#         self.width = width
-#         self.height = height
 
-#     def area(self):
-#         return self.width * self.height
+@input_error
+def change_contact(args, book: AddressBook):
+    name, old_phone, new_phone = args
+    record = book.find(name)
 
-#     def __eq__(self, other):
-#         if not isinstance(other, Rectangle):
-#             return NotImplemented
-#         return self.area() == other.area()
+    if record is None:
+        return "Contact not found."
 
-#     def __ne__(self, other):
-#         return not self.__eq__(other)
+    for phone in record.phones:
 
-#     def __lt__(self, other):
-#         if not isinstance(other, Rectangle):
-#             return NotImplemented
-#         return self.area() < other.area()
+        if phone.value == old_phone:
+            phone.value = new_phone
 
-#     def __le__(self, other):
-#         return self.__lt__(other) or self.__eq__(other)
+            return "Phone number updated."
 
-#     def __gt__(self, other):
-#         if not isinstance(other, Rectangle):
-#             return NotImplemented
-#         return self.area() > other.area()
+    return "Old phone number not found."
 
-#     def __ge__(self, other):
-#         return self.__gt__(other) or self.__eq__(other)
 
+@input_error
+def show_phone(args, book: AddressBook):
+    name = args[0]
+    record = book.find(name)
 
-# if __name__ == "__main__":
-#     rect1 = Rectangle(5, 10)
-#     rect2 = Rectangle(3, 20)
-#     rect3 = Rectangle(5, 10)
-#     print(f"Площа прямокутників: {rect1.area()},
-# {rect2.area()}, {rect3.area()}")
-#     print(rect1 == rect3)  # True: площі рівні
-#     print(rect1 != rect2)  # True: площі не рівні
-#     print(rect1 < rect2)  # True: площа rect1  менша, ніж у rect2
-#     print(rect1 <= rect3)  # True: площі рівні, тому rect1 <= rect3
-#     print(rect1 > rect2)  # False: площа rect1 менша, ніж у rect2
-#     print(rect1 >= rect3)  # True: площі рівні, тому rect1 >= rect3
+    if record is None:
 
+        return "Contact not found."
 
-# class Point:
-#     def __init__(self, x, y):
-#         self.x = x
-#         self.y = y
+    return f"{record.name.value}'s phone numbers: {', '.join(phone.value for phone in record.phones)}"
 
-#     def __eq__(self, other):
-#         if not isinstance(other, Point):
-#             return NotImplemented
-#         return self.x == other.x and self.y == other.y
 
-#     def __ne__(self, other):
-#         return not self.__eq__(other)
+@input_error
+def show_all(book: AddressBook):
 
-#     def __lt__(self, other):
-#         if not isinstance(other, Point):
-#             return NotImplemented
-#         return self.x < other.x and self.y < other.y
+    if not book.records:
 
-#     def __gt__(self, other):
-#         if not isinstance(other, Point):
-#             return NotImplemented
-#         return self.x > other.x and self.y > other.y
+        return "Address book is empty."
+    result = []
 
-#     def __le__(self, other):
-#         if not isinstance(other, Point):
-#             return NotImplemented
-#         return self.x <= other.x and self.y <= other.y
+    for record in book.records.values():
+        phones = ", ".join(phone.value for phone in record.phones)
+        birthday = (
+            record.birthday.value.strftime("%d.%m.%Y")
+            if record.birthday
+            else "No birthday"
+        )
+        result.append(f"{record.name.value}: Phones: {phones}, Birthday: {birthday}")
 
-#     def __ge__(self, other):
-#         if not isinstance(other, Point):
-#             return NotImplemented
-#         return self.x >= other.x and self.y >= other.y
+    return "\n".join(result)
 
 
-# if __name__ == "__main__":
-#     print(Point(0, 0) == Point(0, 0))  # True
-#     print(Point(0, 0) != Point(0, 0))  # False
-#     print(Point(0, 0) < Point(1, 0))  # False
-#     print(Point(0, 0) > Point(0, 1))  # False
-#     print(Point(0, 2) >= Point(0, 1))  # True
-#     print(Point(0, 0) <= Point(0, 0))  # True
+@input_error
+def add_birthday(args, book):
+    name, birthday = args
+    record = book.find(name)
 
+    if record is None:
 
-# class Person:
-#     def __init__(self, age):
-#         self.__age = age  # Пряме присвоєння значення атрибуту в конструкторі
+        return "Contact not found."
+    record.add_birthday(birthday)
 
-#     @property
-#     def age(self):
-#         return self.__age  # Геттер повертає значення приватного поля
+    return "Birthday added."
 
-#     @age.setter
-#     def age(self, value):
-#         if value < 0:
-#             # Валідація вхідного значення
-#             raise ValueError("Вік не може бути від'ємним")
-#         # Присвоєння валідного значення приватному полю
-#         self.__age = value
 
+@input_error
+def show_birthday(args, book):
+    name = args[0]
+    record = book.find(name)
 
-# if __name__ == "__main__":
-#     person = Person(10)
-#     print(person.age)
-#     person.age = -5
+    if record is None or record.birthday is None:
+        return "Birthday not found."
 
+    return f"{record.name.value}'s birthday is {record.birthday.value.strftime('%d.%m.%Y')}."
 
-# class Person:
-#     def __init__(self, name: str, age: int, is_active: bool, is_admin: bool):
-#         self.name = name
-#         self.age = age
-#         self._is_active = None
-#         self.__is_admin = None
-#         self._is_active = is_active
-#         self.__is_admin = is_admin
 
-#     @property
-#     def is_active(self):
-#         return self._is_active
+@input_error
+def birthdays(args, book):
+    upcoming = book.get_upcoming_birthdays()
 
-#     @is_active.setter
-#     def is_active(self, value: bool):
-#         # Тут можна додати будь-яку логіку перевірки або обробки
-#         self._is_active = value
+    if not upcoming:
+        return "No birthdays in the next week."
 
-#     @property
-#     def is_admin(self):
-#         return self.__is_admin
+    return "Upcoming birthdays: " + ", ".join(upcoming)
 
-#     @is_admin.setter
-#     def is_admin(self, value: bool):
-#         # Тут можна додати будь-яку логіку перевірки або обробки
-#         self.__is_admin = value
 
-#     def greeting(self):
-#         return f"Hi {self.name}"
+def parse_input(user_input):
+    parts = user_input.split()
+    command = parts[0]
+    args = parts[1:]
 
+    return command, args
 
-# if __name__ == "__main__":
-#     p = Person("Boris", 34, True, False)
-#     print(p.is_admin)  # Використовуємо геттер
-#     p.is_admin = True  # Використовуємо сеттер
-#     print(p.is_admin)
 
+def main():
+    book = AddressBook()
+    print("*" * 100)
+    print("Welcome to the assistant bot! Type [hello] to get started")
 
-# class Multiplier:
-#     def __init__(self, factor):
-#         self.factor = factor
+    while True:
+        user_input = input("Enter a command: ")
+        command, args = parse_input(user_input)
 
-#     def __call__(self, other):
-#         return self.factor * other
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            break
 
+        elif command == "hello":
+            print("How can I help you?")
+            print(
+                "\n Add  \n Change  \n Phone \n All \n Add-birthday \n Show-birthday \n birthdays \n Exit - Close \n"
+            )
 
-# # Створення екземпляра функтора
-# double = Multiplier(2)
-# # triple = Multiplier(3)
+        elif command == "add":
+            print(add_contact(args, book))
 
-# # Виклик функтора
-# print(double(5))  # Виведе: 10
-# # print(triple(3))  # Виведе: 9
+        elif command == "change":
+            print(change_contact(args, book))
 
+        elif command == "phone":
+            print(show_phone(args, book))
 
-# class Counter:
-#     def __init__(self):
-#         self.count = 0
+        elif command == "all":
+            print(show_all(book))
 
-#     def __call__(self, *args, **kwargs):
-#         self.count += 1
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
 
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
 
-# counter = Counter()
-# counter()
-# counter()
-# counter()
-# counter()
-# counter()
-# print(f"Викликано {counter.count} разів")
+        elif command == "birthdays":
+            print(birthdays(args, book))
 
+        else:
+            print("Invalid command.")
 
-# class CountDown:
-#     def __init__(self, start):
-#         self.current = start
 
-#     def __iter__(self):
-#         return self
-
-#     def __next__(self):
-#         if self.current == 0:
-#             raise StopIteration
-#         self.current -= 1
-#         return self.current
-
-
-# if __name__ == "__main__":
-#     counter = CountDown(5)
-#     for count in counter:
-#         print(count)
-
-
-# def my_generator():
-#     received = yield "Ready"
-#     yield f"Received: {received}"
-
-
-# gen = my_generator()
-# print(next(gen))
-# print(gen.send("Hello"))
-
-
-# class Point:
-#     def __init__(self, x, y):
-#         self.__x = None
-#         self.__y = None
-#         self.x = x
-#         self.y = y
-
-#     @property
-#     def x(self):
-#         return self.__x
-
-#     @x.setter
-#     def x(self, x):
-#         if isinstance(x, (int, float)):
-#             self.__x = x
-
-#     @property
-#     def y(self):
-#         return self.__y
-
-#     @y.setter
-#     def y(self, y):
-#         if isinstance(y, (int, float)):
-#             self.__y = y
-
-
-# point = Point("a", 10)
-
-# print(point.x)  # None
-# print(point.y)  # 10
-# # point = Point(3, "invalid")
-# # print(point.x)  # 3
-# # print(point.y)  # None
+if __name__ == "__main__":
+    main()
